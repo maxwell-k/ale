@@ -9,6 +9,10 @@ call ale#linter#Define('yaml', {
 \   'executable': {b -> ale#path#FindExecutable(b, 'yaml_spectral', [
 \       'node_modules/.bin/spectral',
 \   ])},
-\   'command': '%e lint --ignore-unknown-format -q -f text %t',
+\   'command': '%e lint '
+\   .' --ignore-unknown-format'
+\   .' --quiet'
+\   .' --format json'
+\   .' --stdin-filepath %s',
 \   'callback': 'ale#handlers#spectral#HandleSpectralOutput'
 \})
