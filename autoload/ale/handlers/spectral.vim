@@ -2,30 +2,24 @@
 " Description: Integration of Stoplight Spectral CLI with ALE.
 
 function! ale#handlers#spectral#HandleSpectralOutput(buffer, lines) abort
-    " Matches patterns like the following:
-    " openapi.yml:1:1 error oas3-schema "Object should have required property `info`."
-    " openapi.yml:1:1 warning oas3-api-servers "OpenAPI `servers` must be present and non-empty array."
-    let l:pattern = '\v^.*:(\d+):(\d+) (error|warning) (.*)$'
     let l:output = []
 
-    for l:match in ale#util#GetMatches(a:lines, l:pattern)
-        let l:obj = {
-        \   'lnum': l:match[1] + 0,
-        \   'col': l:match[2] + 0,
-        \   'type': l:match[3] is# 'error' ? 'E' : 'W',
-        \   'text': l:match[4],
-        \}
-
-        let l:code_match = matchlist(l:obj.text, '\v^(.+) "(.+)"$')
-
-        if !empty(l:code_match)
-            let l:obj.code = l:code_match[1]
-            let l:obj.text = l:code_match[2]
-        endif
-
-        call add(l:output, l:obj)
+    for l:item in ale#util#FuzzyJSONDecode(a:lines, [])
+        let l:range = get(l:item, 'range', {})
+        let l:range = get(l:item, 'range', {})
+        let l:start = get(l:range, 'start', {})
+        let l:end = get(l:range, 'end', {})
+        call add(l:output, {
+        \   'text': l:item.message,
+        \   'type': l:item.severity == 0 ? 'E' : 'W',
+        \   'code': l:item.code,
+        \   'nr': l:item.severity,
+        \   'lnum': get(l:start, 'line', 1),
+        \   'col': get(l:start, 'character', 1),
+        \   'end_lnum': get(l:end, 'line', 1),
+        \   'end_col': get(l:end, 'character', 1),
+        \})
     endfor
 
     return l:output
 endfunction
-
